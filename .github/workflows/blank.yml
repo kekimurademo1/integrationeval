@@ -1,0 +1,38 @@
+name: Deployments API
+
+on:
+  workflow_dispatch:
+    inputs:
+      result:
+        description: '0 - デプロイ成功 / 1 - デプロイ失敗'
+        default: 0
+        required: false
+        type: number
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: start deployment
+      uses: bobheadxi/deployments@v1
+      id: deployment
+      with:
+        step: start
+        token: ${{ secrets.GITHUB_TOKEN }}
+        env: Production
+
+    - name: do my deploy
+      run: exit ${{ inputs.result }}
+
+    - name: update deployment status
+      uses: bobheadxi/deployments@v1
+      if: always()
+      with:
+        step: finish
+        token: ${{ secrets.GITHUB_TOKEN }}
+        status: ${{ job.status }}
+        env: ${{ steps.deployment.outputs.env }}
+        deployment_id: ${{ steps.deployment.outputs.deployment_id }}
